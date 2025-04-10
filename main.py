@@ -6,6 +6,10 @@ from woocommerce import API
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 import shutil
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 load_dotenv()
 
@@ -78,7 +82,7 @@ def process_images(input_folder):
         preview = mockup.convert("RGB").resize(OUTPUT_IMAGE_SIZE, Image.Resampling.LANCZOS)
         preview.save(os.path.join(product_folder, f"{name}_preview.jpg"), quality=90)
 
-        print(f"✅ Processed: {filename}")
+        logging.info(f"✅ Image Processed: {filename}")
 
 
 def upload_image(image_path):
@@ -123,25 +127,39 @@ def create_product(name, main_image_id, gallery_image_id, extra_categories):
 
 
 def main(input_folder, extra_categories):
-    process_images(input_folder)
+    try:
+        process_images(input_folder)
+    except FileNotFoundError as fnf_error:
+        logging.error(f"Input folder not found: {fnf_error}")
+    except PermissionError as perm_error:
+        logging.error(f"Permission denied: {perm_error}")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during image processing: {e}")
 
-    for folder in os.listdir(OUTPUT_FOLDER):
-        folder_path = os.path.join(OUTPUT_FOLDER, folder)
-        if os.path.isdir(folder_path):
-            print(f"\n📦 Creating product: {folder}")
-            watermarked_img = os.path.join(folder_path, f"{folder}_watermarked.jpg")
-            preview_img = os.path.join(folder_path, f"{folder}_preview.jpg")
+    try:
+        for folder in os.listdir(OUTPUT_FOLDER):
+            folder_path = os.path.join(OUTPUT_FOLDER, folder)
+            if os.path.isdir(folder_path):
+                logging.info(f"📦 Creating product: {folder}")
+                watermarked_img = os.path.join(folder_path, f"{folder}_watermarked.jpg")
+                preview_img = os.path.join(folder_path, f"{folder}_preview.jpg")
 
-            if os.path.exists(watermarked_img) and os.path.exists(preview_img):
-                try:
-                    main_id = upload_image(watermarked_img)
-                    preview_id = upload_image(preview_img)
-                    product = create_product(folder, main_id, preview_id, extra_categories)
-                    print(f"✅ Created product '{folder}' (ID: {product['id']})")
-                except Exception as e:
-                    print(f"❌ Failed for '{folder}': {e}")
-            else:
-                print(f"⚠️ Skipped '{folder}' — images missing.")
+                if os.path.exists(watermarked_img) and os.path.exists(preview_img):
+                    try:
+                        main_id = upload_image(watermarked_img)
+                        preview_id = upload_image(preview_img)
+                        product = create_product(folder, main_id, preview_id, extra_categories)
+                        logging.info(f"✅ Created product '{folder}' (ID: {product['id']})")
+                    except Exception as e:
+                        logging.error(f"❌ Failed for '{folder}': {e}")
+                else:
+                    logging.warning(f"⚠️ Skipped '{folder}' — images missing.")
+    except FileNotFoundError as fnf_error:
+        logging.error(f"Output folder not found: {fnf_error}")
+    except PermissionError as perm_error:
+        logging.error(f"Permission denied: {perm_error}")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during product creation: {e}")
 
 
 if __name__ == "__main__":
