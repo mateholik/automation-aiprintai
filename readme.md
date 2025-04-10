@@ -4,9 +4,9 @@ This project automates the processing of images and the creation of products in 
 
 ## Prerequisites
 1. Install Python 3.x.
-2. Install required Python packages:
+2. Install the following required Python libraries:
    ```bash
-   pip install -r requirements.txt
+   pip install python-dotenv Pillow woocommerce requests
    ```
 3. Create a `.env` file in the project root with the following variables:
    ```env

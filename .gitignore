@@ -7,3 +7,6 @@ __pycache__/
 
 # Ignore output folder
 out/
+
+# Ignore macOS system files
+.DS_Store
