@@ -9,7 +9,9 @@ import shutil
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 load_dotenv()
 
@@ -39,6 +41,7 @@ with open("static/description.html", "r", encoding="utf-8") as f:
 if os.path.exists(OUTPUT_FOLDER):
     shutil.rmtree(OUTPUT_FOLDER)
 
+
 def process_images(input_folder):
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
@@ -54,7 +57,9 @@ def process_images(input_folder):
         original = Image.open(img_path).convert("RGBA")
 
         original.convert("RGB").save(
-            os.path.join(product_folder, f"{name}_original.jpg"), quality=95, subsampling=0
+            os.path.join(product_folder, f"{name}_original.jpg"),
+            quality=95,
+            subsampling=0,
         )
 
         watermark = Image.open(WATERMARK_PATH).convert("RGBA")
@@ -68,18 +73,28 @@ def process_images(input_folder):
 
         pos = (
             (original.width - watermark.width) // 2,
-            (original.height - watermark.height) // 2
+            (original.height - watermark.height) // 2,
         )
 
         watermarked = original.copy()
         watermarked.paste(watermark, pos, watermark)
-        watermarked = watermarked.convert("RGB").resize(OUTPUT_IMAGE_SIZE, Image.Resampling.LANCZOS)
-        watermarked.save(os.path.join(product_folder, f"{name}_watermarked.jpg"), quality=90)
-
+        watermarked = watermarked.convert("RGB").resize(
+            OUTPUT_IMAGE_SIZE, Image.Resampling.LANCZOS
+        )
+        watermarked.save(
+            os.path.join(product_folder, f"{name}_watermarked.jpg"), quality=90
+        )
+        
         mockup = Image.open(MOCKUP_PATH).convert("RGBA")
         art_resized = original.resize(MOCKUP_TARGET_SIZE, Image.Resampling.LANCZOS)
-        mockup.paste(art_resized, MOCKUP_PASTE_COORDS, art_resized if art_resized.mode == "RGBA" else None)
-        preview = mockup.convert("RGB").resize(OUTPUT_IMAGE_SIZE, Image.Resampling.LANCZOS)
+        mockup.paste(
+            art_resized,
+            MOCKUP_PASTE_COORDS,
+            art_resized if art_resized.mode == "RGBA" else None,
+        )
+        preview = mockup.convert("RGB").resize(
+            OUTPUT_IMAGE_SIZE, Image.Resampling.LANCZOS
+        )
         preview.save(os.path.join(product_folder, f"{name}_preview.jpg"), quality=90)
 
         logging.info(f"✅ Image Processed: {filename}")
@@ -88,13 +103,17 @@ def process_images(input_folder):
 def upload_image(image_path):
     url = f"{WC_URL}/wp-json/wp/v2/media"
     filename = os.path.basename(image_path)
-    with open(image_path, 'rb') as img:
-        files = {'file': (filename, img, 'image/jpeg')}
-        headers = {'User-Agent': 'curl/7.64.1'}
-        res = requests.post(url, files=files, headers=headers,
-                            auth=HTTPBasicAuth(WP_ADMIN_USERNAME, WP_APPLICATION_PASSWORD))
+    with open(image_path, "rb") as img:
+        files = {"file": (filename, img, "image/jpeg")}
+        headers = {"User-Agent": "curl/7.64.1"}
+        res = requests.post(
+            url,
+            files=files,
+            headers=headers,
+            auth=HTTPBasicAuth(WP_ADMIN_USERNAME, WP_APPLICATION_PASSWORD),
+        )
     res.raise_for_status()
-    return res.json().get('id')
+    return res.json().get("id")
 
 
 def create_product(name, main_image_id, gallery_image_id, extra_categories):
@@ -105,7 +124,7 @@ def create_product(name, main_image_id, gallery_image_id, extra_categories):
         url=WC_URL,
         consumer_key=WC_CONSUMER_KEY,
         consumer_secret=WC_CONSUMER_SECRET,
-        version="wc/v3"
+        version="wc/v3",
     )
 
     product_data = {
@@ -115,10 +134,7 @@ def create_product(name, main_image_id, gallery_image_id, extra_categories):
         "status": "publish",
         "regular_price": "0.00",
         "categories": categories,
-        "images": [
-            {"id": main_image_id},
-            {"id": gallery_image_id}
-        ]
+        "images": [{"id": main_image_id}, {"id": gallery_image_id}],
     }
 
     res = wcapi.post("products", product_data)
@@ -148,8 +164,12 @@ def main(input_folder, extra_categories):
                     try:
                         main_id = upload_image(watermarked_img)
                         preview_id = upload_image(preview_img)
-                        product = create_product(folder, main_id, preview_id, extra_categories)
-                        logging.info(f"✅ Created product '{folder}' (ID: {product['id']})")
+                        product = create_product(
+                            folder, main_id, preview_id, extra_categories
+                        )
+                        logging.info(
+                            f"✅ Created product '{folder}' (ID: {product['id']})"
+                        )
                     except Exception as e:
                         logging.error(f"❌ Failed for '{folder}': {e}")
                 else:
@@ -164,7 +184,9 @@ def main(input_folder, extra_categories):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=str, required=True, help="Path to image input folder")
-    parser.add_argument("--categories", nargs='*', type=int, default=[])
+    parser.add_argument(
+        "--input", type=str, required=True, help="Path to image input folder"
+    )
+    parser.add_argument("--categories", nargs="*", type=int, default=[])
     args = parser.parse_args()
     main(args.input, args.categories)

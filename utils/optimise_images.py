@@ -8,14 +8,18 @@ SAVE_QUALITY = 90
 # =====================
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 start_path = "/Users/mateholik/Desktop/ai_printai/aiprintai_2025_midjourney_sets/2025_3_Giedre_geles/ready"  # current directory
 
 try:
     for root, dirs, files in os.walk(start_path):
         for file in files:
-            if TARGET_KEYWORD.lower() in file.lower() and file.lower().endswith((".jpg", ".jpeg", ".png")):
+            if TARGET_KEYWORD.lower() in file.lower() and file.lower().endswith(
+                (".jpg", ".jpeg", ".png")
+            ):
                 file_path = os.path.join(root, file)
 
                 try:
@@ -26,7 +30,7 @@ try:
                             format="JPEG",
                             quality=SAVE_QUALITY,
                             optimize=True,
-                            progressive=True
+                            progressive=True,
                         )
                         logging.info(f"✅ Optimized: {file_path}")
                 except Exception as e:
@@ -38,4 +42,6 @@ except PermissionError as perm_error:
 except Exception as e:
     logging.error(f"❌ An unexpected error occurred: {e}")
 
-logging.info("🎉 All matching 'Group' images optimized recursively from current folder.")
+logging.info(
+    "🎉 All matching 'Group' images optimized recursively from current folder."
+)
