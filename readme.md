@@ -38,3 +38,10 @@ This project automates the processing of images and the creation of products in 
 ```
 python3 init.py --input "/Users/mateholik/Desktop/ai_printai/aiprintai_2025_midjourney_sets/gyvunai" --categories 267
   ```
+
+## Quick start
+- cd ~/Documents/AUTOMATION_FILES
+- python3 -m venv venv
+- source venv/bin/activate
+- pip install requests Pillow python-dotenv woocommerce
+- python3 main.py --input /Users/mateholik/Desktop/test --categories 12 34
